@@ -1,1 +1,2 @@
-pyswagger
+pyswagger==0.8.37
+requests==2.18.4
