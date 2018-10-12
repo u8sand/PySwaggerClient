@@ -1,3 +1,4 @@
+import re
 import json
 import yaml
 from urllib import request
@@ -25,25 +26,35 @@ def get_spec_v3(spec_v3):
         spec_v2 = json.load(process.stdout)
         return spec_v2
 
-def read_spec(spec_file):
+def parse_spec(spec_file):
     try:
         return yaml.load(spec_file)
     except:
         return json.load(spec_file)
 
-def fetch_spec(spec_url, **kwargs):
-    req = request.urlopen(
-      request.Request(
-        spec_url,
-        **kwargs
-      )
-    )
-    spec = read_spec(req)
+def read_spec(spec):
     if spec.get('swagger', '').startswith('2'):
         return get_spec_v2(spec)
     if spec.get('openapi', '').startswith('3'):
         return get_spec_v3(spec)
     raise Exception('Spec version could not be identified')
 
-def fetch_spec_raw(*args, **kwargs):
-    return json.dumps(fetch_spec(*args, **kwargs))
+def fetch_spec(spec_url, **kwargs):
+    return request.urlopen(
+      request.Request(
+        spec_url,
+        **kwargs
+      )
+    )
+
+def resolve_spec(spec_file_or_url, **kwargs):
+    ''' Resolves the spec whether it's a url to, json of, or file containing
+    spec in v3 / v2, json / yaml format. Note that a string is assumed to
+    be a url, so parse your JSON if it's serialized.
+    '''
+    if type(spec_file_or_url) == str:
+        return read_spec(parse_spec(fetch_spec(spec_file_or_url, **kwargs)))
+    elif type(spec_file_or_url) == dict:
+        return read_spec(spec_file_or_url)
+    else:
+        return read_spec(parse_spec(spec_file_or_url))

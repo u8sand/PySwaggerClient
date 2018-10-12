@@ -10,7 +10,7 @@ from urllib import request
 from pyswagger import App
 from pyswagger.getter import SimpleGetter
 from pyswagger.contrib.client.requests import Client
-from .fetch import fetch_spec_raw
+from .fetch import resolve_spec
 from .util import bind, slugify
 
 class SwaggerClient:
@@ -142,7 +142,7 @@ class SwaggerClient:
   def _create_getter(self, headers):
     class Getter(SimpleGetter):
       __simple_getter_callback__ = bind(
-        fetch_spec_raw,
+        resolve_spec,
         headers=headers,
       )
     return Getter
