@@ -3,9 +3,15 @@ A pyswagger wrapper for pythonic swagger client bindings. Exposes the API to pyt
 
 ## Installation
 ```bash
-pip install https://github.com/u8sand/PySwaggerClient/archive/master.zip
+# stable
+pip install https://github.com/u8sand/PySwaggerClient/archive/v1.0.zip
 # optional for openapi-3 version handling
 npm install -g api-spec-converter
+```
+
+### Edge
+```bash
+pip install --upgrade https://github.com/u8sand/PySwaggerClient/archive/master.zip
 ```
 
 ### Usage
