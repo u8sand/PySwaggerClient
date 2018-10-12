@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 
 def get_spec_v2(spec_v2):
     # Use v2 spec as-is
-    return spec_2
+    return spec_v2
 
 def get_spec_v3(spec_v3):
     # Convert v3 spec to v2 with api-spec-converter
