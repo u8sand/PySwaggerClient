@@ -39,7 +39,7 @@ def fetch_spec(spec_url, **kwargs):
       )
     )
     spec = read_spec(req)
-    if spec.get('swagger') == 2:
+    if spec.get('swagger', '').startswith('2'):
         return get_spec_v2(spec)
     if spec.get('openapi', '').startswith('3'):
         return get_spec_v3(spec)
