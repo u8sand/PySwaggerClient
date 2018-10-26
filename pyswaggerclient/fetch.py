@@ -4,6 +4,7 @@ import yaml
 from urllib import request
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
+from .util import slugify
 
 def get_spec_v2(spec_v2):
     # Use v2 spec as-is
@@ -25,6 +26,39 @@ def get_spec_v3(spec_v3):
         )
         spec_v2 = json.load(process.stdout)
         return spec_v2
+
+def repair_spec(spec_v2):
+    # Fill in sane default operationIds if not present or broken
+    op_ids = set()
+    for path in spec_v2['paths'].keys():
+        for method in [
+            'get',
+            'put',
+            'post',
+            'delete',
+            'options',
+            'head',
+            'patch',
+        ]:
+            endpoint = spec_v2['paths'][path].get(method)
+            if not endpoint:
+                continue
+            # Get current operationId
+            op_id = endpoint.get('operationId')
+            # operationId not actually specified, or we have a duplicate
+            if not op_id or op_id in op_ids:
+                # Generate operation id {path}_{method}
+                op_id = path + '_' + method
+            # Ensure operationId is properly slugified
+            op_id = slugify(op_id).strip('_')
+            # Ensure we don't have any duplicates
+            assert op_id not in op_ids, 'Duplicate operation id could not be resolved! (%s)' % (op_id)
+            # Add the operation id to the set
+            op_ids.add(op_id)
+            # Update the spec
+            spec_v2['paths'][path][method]['operationId'] = op_id
+
+    return spec_v2
 
 def parse_spec(spec_file):
     try:
@@ -53,8 +87,8 @@ def resolve_spec(spec_file_or_url, **kwargs):
     be a url, so parse your JSON if it's serialized.
     '''
     if type(spec_file_or_url) == str:
-        return read_spec(parse_spec(fetch_spec(spec_file_or_url, **kwargs)))
+        return repair_spec(read_spec(parse_spec(fetch_spec(spec_file_or_url, **kwargs))))
     elif type(spec_file_or_url) == dict:
-        return read_spec(spec_file_or_url)
+        return repair_spec(read_spec(spec_file_or_url))
     else:
-        return read_spec(parse_spec(spec_file_or_url))
+        return repair_spec(read_spec(parse_spec(spec_file_or_url)))
