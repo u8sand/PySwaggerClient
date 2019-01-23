@@ -58,6 +58,8 @@ def repair_spec(spec_v2):
             # Update the spec
             spec_v2['paths'][path][method]['operationId'] = op_id
 
+    spec_v2['basePath'] = '/' if spec_v2['basePath'] == '/' else spec_v2['basePath'].rstrip('/')
+
     return spec_v2
 
 def parse_spec(spec_file):
