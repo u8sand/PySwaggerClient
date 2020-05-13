@@ -64,8 +64,8 @@ class SwaggerClient:
     self._update_magic()
 
   def _update_magic(self):
-    self.models = type('Models', (object,), dict(self._create_models()))
-    self.actions = type('Actions', (object,), dict(self._create_actions()))
+    setattr(self, 'models', type('Models', (object,), dict(self._create_models())))
+    setattr(self, 'actions', type('Actions', (object,), dict(self._create_actions())))
   
   def _create_models(self):
     for model_name, model in self._app.m.items():
