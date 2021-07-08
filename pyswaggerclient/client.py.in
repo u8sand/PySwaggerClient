@@ -1,0 +1,55 @@
+from pyswaggerclient import SwaggerClient
+from typing import Optional, Union, List, Dict, Any
+from dataclasses import dataclass
+
+{% for model_name, model in client._app.m.items() %}
+{% set model_name_slug = slugify(model_name) %}
+@dataclass
+class {{ classname }}{{ model_name_slug.capitalize() }}Model:
+  {% for model_property_key, model_property_value in model.properties.items() %}
+  {% set model_property_key_slug = slugify(model_property_key) %}
+  {{ model_property_key_slug }}: {{ swagger_type_to_python_type(model_property_value) }}
+  {% endfor %}
+{% endfor %}
+
+@dataclass
+class {{ classname }}Models:
+  {% for model_name, model in client._app.m.items() %}
+  {% set model_name_slug = slugify(model_name) %}
+  {{ model_name_slug }}: {{ classname }}{{ model_name_slug.capitalize() }}Model
+  {% endfor %}
+
+{% for action_name, action_value in client._app.op.items() %}
+{% set action_name_slug = slugify(action_name.split('!##!')[-1]) %}
+class {{ classname }}{{ action_name_slug.capitalize() }}Action:
+  ''' {{ client._create_doc(action_value) }} '''
+  def __init__(self, client):
+    self.client = client
+
+  def call(
+    self,
+    {% for param in action_value.parameters %}
+    {% set param_name_slug = slugify(param.name) %}
+    {{ param_name_slug }}: {{ swagger_type_to_python_type(param) }} = None,
+    {% endfor %}
+  ) -> {{ swagger_type_to_python_type(list(action_value.responses.values())) }}:
+    ''' {{ client._create_doc(action_value) }} '''
+    return self.client._client_request(
+      '{{ action_name }}',
+      {% for param in action_value.parameters %}
+      {% set param_name_slug = slugify(param.name) %}
+      {{ param_name_slug }}={{ param_name_slug }},
+      {% endfor %}
+    )
+{% endfor %}
+
+@dataclass
+class {{ classname }}Actions:
+  {% for action_name, action_value in client._app.op.items() %}
+  {% set action_name_slug = slugify(action_name.split('!##!')[-1]) %}
+  {{ action_name_slug }}: {{ classname }}{{ action_name_slug.capitalize() }}Action
+  {% endfor %}
+
+class {{ classname }}(SwaggerClient):
+  models: {{ classname }}Models
+  actions: {{ classname }}Actions
